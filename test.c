@@ -1,7 +1,2 @@
-
-int main() {
-  /*
-  /* int x = 20; */
-  return "hello";
-  */
-}
++ 4;
+7 - 8;

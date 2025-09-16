@@ -66,6 +66,8 @@ class Scanner {
         case '+': addToken(PLUS); break;
         case ';': addToken(SEMICOLON); break;
         case '*': addToken(STAR); break;
+        case '?': addToken(QUESTION_MARK); break;
+        case ':': addToken(COLON); break;
         case '!':
             addToken(match('=') ? BANG_EQUAL : BANG);
             break;
@@ -140,7 +142,7 @@ class Scanner {
         current++;
         return true;
     }
-    
+
     private char peek() {
         if (isAtEnd()) return '\0';
         return source.charAt(current);
@@ -149,7 +151,7 @@ class Scanner {
     private char peekNext() {
         if (current + 1 >= source.length()) return '\0';
         return source.charAt(current + 1);
-    } 
+    }
 
     private boolean isAlpha(char c) {
         return (c >= 'a' && c <= 'z') ||
@@ -218,7 +220,7 @@ class Scanner {
             Lox.error(line, "Unterminated comment.");
             return;
         }
-        
+
         advance();
     }
 }
