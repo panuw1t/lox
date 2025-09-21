@@ -1,8 +1,59 @@
 package com.craftinginterpreters.lox;
 
-class AstPrinter implements Expr.Visitor<String> {
-    String print(Expr expr) {
-        return expr.accept(this);
+import java.util.List;
+
+class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
+    private String indent = "";
+
+    String print(List<Stmt> statements) {
+        String s = "";
+        for (Stmt statement : statements) {
+            s = s + statement.accept(this) + "\n";
+        }
+        return s;
+    }
+
+    @Override
+    public String visitBlockStmt(Stmt.Block stmt) {
+        String statements = "";
+        String prvious = this.indent;
+        this.indent = prvious + "  ";
+        for (Stmt statement : stmt.statements) {
+            statements = statements + this.indent + statement.accept(this) + "\n";
+        }
+        this.indent = prvious;
+        return statements;
+    }
+
+    @Override
+    public String visitExpressionStmt(Stmt.Expression stmt) {
+        return stmt.expression.accept(this);
+    }
+
+    @Override
+    public String visitIfStmt(Stmt.If stmt) {
+        String prvious = this.indent;
+        this.indent = prvious + "  ";
+        String statements = "(if " + stmt.condition.accept(this) + "\n";
+        statements = statements + this.indent + stmt.thenBranch.accept(this);
+        if (stmt.elseBranch != null) {
+            statements = statements + "\n" + this.indent + stmt.elseBranch.accept(this);
+        }
+        this.indent = prvious;
+        return statements  + ")";
+    }
+
+    @Override
+    public String visitPrintStmt(Stmt.Print stmt) {
+        return parenthesize("print", stmt.expression);
+    }
+
+    @Override
+    public String visitVarStmt(Stmt.Var stmt) {
+        if (stmt.initializer != null) {
+            return parenthesize("var " + stmt.name.lexeme, stmt.initializer);
+        }
+        return "(var " + stmt.name.lexeme + ")";
     }
 
     @Override
@@ -32,6 +83,20 @@ class AstPrinter implements Expr.Visitor<String> {
         return parenthesize("?:", expr.condition, expr.ifTrue, expr.ifFalse);
     }
 
+    @Override
+    public String visitVariableExpr(Expr.Variable expr) {
+        return expr.name.lexeme;
+    }
+
+    @Override
+    public String visitAssignExpr(Expr.Assign expr) {
+        return parenthesize("assign " + expr.name.lexeme, expr.value);
+    }
+    @Override
+    public String visitLogicalExpr(Expr.Logical expr){
+        return parenthesize(expr.operator.lexeme, expr.left, expr.right);
+    }
+
     private String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
 
@@ -46,17 +111,5 @@ class AstPrinter implements Expr.Visitor<String> {
     }
 
     public static void main(String[] args) {
-        Expr expression = new Expr.Binary(new Expr.Unary(new Token(TokenType.MINUS, "-", null, 1),
-                                                         new Expr.Literal(123)),
-                                          new Token(TokenType.STAR, "*", null, 1),
-                                          new Expr.Grouping(new Expr.Literal(45.67)));
-
-        Expr exp = new Expr.Ternary(new Expr.Grouping(new Expr.Binary(new Expr.Literal(3),
-                                                                      new Token(TokenType.EQUAL, "==", null, 1),
-                                                                      new Expr.Literal(2))),
-                                    new Expr.Literal(100),
-                                    new Expr.Literal(0));
-
-        System.out.println(new AstPrinter().print(exp));
     }
 }

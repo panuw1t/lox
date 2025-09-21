@@ -40,7 +40,13 @@ public class Lox {
             System.out.print("> ");
             String line = reader.readLine();
             if (line == null) break;
-            run(line);
+            if (line.charAt(line.length() - 1) != ';') {
+                run(line + ";");
+            }
+            else {
+                run(line);
+            }
+
             hadError = false;
         }
     }
@@ -52,13 +58,13 @@ public class Lox {
         //     System.out.println(token.lexeme + " : " + token.type);
         // }
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         // Stop if there was a syntax error.
         if (hadError) return;
 
-        System.out.println(new AstPrinter().print(expression));
-        interpreter.interpret(expression);
+        System.out.println(new AstPrinter().print(statements));
+        interpreter.interpret(statements);
     }
 
     static void error(int line, String message) {

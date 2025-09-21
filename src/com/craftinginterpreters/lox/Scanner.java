@@ -85,7 +85,7 @@ class Scanner {
                 // A comment goes until the end of the line.
                 while (peek() != '\n' && !isAtEnd()) advance();
             }
-            if (match('*')) {
+            else if (match('*')) {
                 twoLineComment();
             }
             else {
