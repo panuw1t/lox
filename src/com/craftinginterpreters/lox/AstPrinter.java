@@ -7,26 +7,12 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     private String indent = "";
 
     String print(List<Stmt> statements) {
-        String s = "";
-        for (int i=0; i < statements.size(); i++) {
-            s += statements.get(i).accept(this);
-            if (i != statements.size() - 1) {
-                s += "\n";
-            }
-        }
-        return s;
+        return listStmt(statements);
     }
 
     @Override
     public String visitBlockStmt(Stmt.Block stmt) {
-        String statements = "";
-        for (int i=0; i < stmt.statements.size(); i++) {
-            statements += stmt.statements.get(i).accept(this);
-            if (i != stmt.statements.size() - 1) {
-                statements += "\n";
-            }
-        }
-        return statements;
+        return listStmt(stmt.statements);
     }
 
     @Override
@@ -53,14 +39,25 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     @Override
+    public String visitReturnStmt(Stmt.Return stmt) {
+        return this.indent + parenthesize("return", stmt.value);
+    }
+
+    @Override
     public String visitWhileStmt(Stmt.While stmt) {
         String prvious = this.indent;
         this.indent = this.indent + "  ";
         StringBuilder builder = new StringBuilder();
+        builder.append(prvious);
         builder.append("(while ").append(stmt.condition.accept(this)).append("\n");
         builder.append(stmt.body.accept(this)).append(")");
         this.indent = prvious;
         return builder.toString();
+    }
+
+    @Override
+    public String visitBreakStmt(Stmt.Break stmt) {
+        return this.indent + "(break)";
     }
 
     @Override
@@ -69,6 +66,31 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
             return this.indent + parenthesize("var " + stmt.name.lexeme, stmt.initializer);
         }
         return this.indent + "(var " + stmt.name.lexeme + ")";
+    }
+
+    @Override
+    public String visitFunctionStmt(Stmt.Function stmt) {
+        String defun = this.indent + "(defun " + stmt.name.lexeme + " (";
+        for (Token param : stmt.params) {
+            defun += param.lexeme + " ";
+        }
+        defun = defun.trim();
+        defun += ")\n";
+        String previous = this.indent;
+        this.indent += " ";
+        defun += listStmt(stmt.body);
+        defun += ")";
+        this.indent = previous;
+        return defun;
+    }
+
+    @Override
+    public String visitCallExpr(Expr.Call expr) {
+        String arguments = "";
+        for (Expr arg : expr.arguments){
+            arguments += arg.accept(this);
+        }
+        return "(" + expr.callee.accept(this) + " " + arguments + ")";
     }
 
     @Override
@@ -111,6 +133,22 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
         return parenthesize(expr.operator.lexeme, expr.left, expr.right);
     }
 
+    @Override
+    public String visitLambdaExpr(Expr.Lambda expr) {
+        String defun = this.indent + "(lambda (";
+        for (Token param : expr.fun.params) {
+            defun += param.lexeme + " ";
+        }
+        defun = defun.trim();
+        defun += ")\n";
+        String previous = this.indent;
+        this.indent += " ";
+        defun += listStmt(expr.fun.body);
+        defun += ")";
+        this.indent = previous;
+        return defun;
+    }
+
     private String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
 
@@ -124,6 +162,16 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
         return builder.toString();
     }
 
+    private String listStmt(List<Stmt> stmt) {
+        String statements = "";
+        for (int i=0; i < stmt.size(); i++) {
+            statements += stmt.get(i).accept(this);
+            if (i != stmt.size() - 1) {
+                statements += "\n";
+            }
+        }
+        return statements;
+    }
     public static void main(String[] args) {
     }
 }

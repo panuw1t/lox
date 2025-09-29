@@ -59,11 +59,19 @@ public class Lox {
         // }
         Parser parser = new Parser(tokens);
         List<Stmt> statements = parser.parse();
-
         // Stop if there was a syntax error.
         if (hadError) return;
 
+        Resolver resolver = new Resolver(interpreter);
+        resolver.resolve(statements);
+
+        // Stop if there was a resolution error.
+        if (hadError) return;
+
+        System.out.println("--------tree----------");
         System.out.println(new AstPrinter().print(statements));
+        System.out.println("---------------------");
+
         interpreter.interpret(statements);
     }
 
@@ -74,6 +82,15 @@ public class Lox {
     private static void report(int line, String where, String message) {
         System.err.println("[line " + line + "] Error" + where + ": " + message);
         hadError = true;
+    }
+
+    static void warning(Token token, String message){
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", message);
+        }
+        hadError = false;
     }
 
     static void error(Token token, String message) {
