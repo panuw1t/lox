@@ -16,6 +16,17 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     @Override
+    public String visitClassStmt(Stmt.Class stmt) {
+        String previous = this.indent;
+        String Class = this.indent + "(class " + stmt.name.lexeme + "\n";
+        this.indent = this.indent + "  ";
+        Class += listStmt(stmt.methods);
+        Class += ")";
+        this.indent = previous;
+        return Class;
+    }
+
+    @Override
     public String visitExpressionStmt(Stmt.Expression stmt) {
         return this.indent + stmt.expression.accept(this);
     }
@@ -40,7 +51,10 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
     @Override
     public String visitReturnStmt(Stmt.Return stmt) {
-        return this.indent + parenthesize("return", stmt.value);
+        if (stmt.value != null) {
+            return this.indent + parenthesize("return", stmt.value);
+        }
+        return this.indent + "(return)";
     }
 
     @Override
@@ -74,10 +88,10 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
         for (Token param : stmt.params) {
             defun += param.lexeme + " ";
         }
-        defun = defun.trim();
+        defun = defun.stripTrailing();
         defun += ")\n";
         String previous = this.indent;
-        this.indent += " ";
+        this.indent += "  ";
         defun += listStmt(stmt.body);
         defun += ")";
         this.indent = previous;
@@ -86,11 +100,16 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
     @Override
     public String visitCallExpr(Expr.Call expr) {
-        String arguments = "";
+        String arguments = " ";
         for (Expr arg : expr.arguments){
             arguments += arg.accept(this);
         }
-        return "(" + expr.callee.accept(this) + " " + arguments + ")";
+        return "(" + expr.callee.accept(this) + arguments.stripTrailing() + ")";
+    }
+
+    @Override
+    public String visitGetExpr(Expr.Get expr) {
+        return  "(" + expr.object.accept(this) + " . " + expr.name.lexeme + ")";
     }
 
     @Override
@@ -134,12 +153,22 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     @Override
+    public String visitSetExpr(Expr.Set expr) {
+        return "(set (" + expr.object.accept(this) + " . " + expr.name.lexeme + ") " + expr.value.accept(this) + ")";
+    }
+
+    @Override
+    public String visitThisExpr(Expr.This expr) {
+        return expr.keyword.lexeme;
+    }
+
+    @Override
     public String visitLambdaExpr(Expr.Lambda expr) {
         String defun = this.indent + "(lambda (";
         for (Token param : expr.fun.params) {
             defun += param.lexeme + " ";
         }
-        defun = defun.trim();
+        defun = defun.stripTrailing();
         defun += ")\n";
         String previous = this.indent;
         this.indent += " ";
@@ -162,7 +191,7 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
         return builder.toString();
     }
 
-    private String listStmt(List<Stmt> stmt) {
+    private String listStmt(List<? extends Stmt> stmt) {
         String statements = "";
         for (int i=0; i < stmt.size(); i++) {
             statements += stmt.get(i).accept(this);
@@ -172,6 +201,7 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
         }
         return statements;
     }
+
     public static void main(String[] args) {
     }
 }
