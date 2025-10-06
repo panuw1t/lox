@@ -43,7 +43,7 @@ class Parser {
 
         List<Stmt.Function> methods = new ArrayList<>();
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            methods.add((Stmt.Function)function("method"));
+            methods.add((Stmt.Function)methods());
         }
 
         consume(RIGHT_BRACE, "Expect '}' after class body.");
@@ -182,7 +182,34 @@ class Parser {
         consume(RIGHT_PAREN, "Expect ')' after parameters.");
         consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
         List<Stmt> body = block();
-        return new Stmt.Function(name, parameters, body);
+        return new Stmt.Function(name, parameters, body, "function");
+    }
+
+    private Stmt methods() {
+        String type = "method";
+        if (match(CLASS)) {
+            type = "static";
+        }
+        Token name = consume(IDENTIFIER, "Expect method name.");
+        List<Token> parameters = new ArrayList<>();
+        if (match(LEFT_PAREN)) {
+            if (!check(RIGHT_PAREN)) {
+                do {
+                    if (parameters.size() >= 255) {
+                        error(peek(), "Can't have more than 255 parameters.");
+                    }
+
+                    parameters.add(consume(IDENTIFIER, "Expect parameter name."));
+                } while (match(COMMA));
+            }
+            consume(RIGHT_PAREN, "Expect ')' after parameters.");
+        }
+        else {
+            type = "getter";
+        }
+        consume(LEFT_BRACE, "Expect '{' before method body.");
+        List<Stmt> body = block();
+        return new Stmt.Function(name, parameters, body, type);
     }
 
     private List<Stmt> block() {
@@ -398,7 +425,7 @@ class Parser {
         consume(RIGHT_PAREN, "Expect ')' after parameters.");
         consume(LEFT_BRACE, "Expect '{' before lambda body.");
         List<Stmt> body = block();
-        return new Expr.Lambda(new Stmt.Function(previous(), parameters, body));
+        return new Expr.Lambda(new Stmt.Function(previous(), parameters, body, "lambda"));
     }
 
     private boolean match(TokenType... types) {

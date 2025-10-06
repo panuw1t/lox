@@ -3,7 +3,7 @@ package com.craftinginterpreters.lox;
 import java.util.List;
 import java.util.Map;
 
-class LoxClass implements LoxCallable {
+class LoxClass extends LoxInstance implements LoxCallable {
     final String name;
     private final Map<String, LoxFunction> methods;
 
@@ -18,6 +18,14 @@ class LoxClass implements LoxCallable {
         }
 
         return null;
+    }
+
+    @Override
+    Object get(Token name) {
+        LoxFunction method = this.findMethod(name.lexeme);
+        if (method != null && method.type() == "static") return method;
+
+        throw new RuntimeError(name, "Undefined property '" + name.lexeme + "'.");
     }
 
     @Override

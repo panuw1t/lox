@@ -19,6 +19,10 @@ class LoxFunction implements LoxCallable {
         return new LoxFunction(declaration, environment, isInitializer);
     }
 
+    public String type() {
+        return declaration.type;
+    }
+
     @Override
     public Object call(Interpreter interpreter, List<Object> arguments) {
         Environment environment = new Environment(closure);

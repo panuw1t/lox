@@ -182,7 +182,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void>{
     public Object visitGetExpr(Expr.Get expr) {
         Object object = evaluate(expr.object);
         if (object instanceof LoxInstance) {
-            return ((LoxInstance) object).get(expr.name);
+              Object identifier =  ((LoxInstance) object).get(expr.name);
+              if (identifier instanceof LoxFunction && ((LoxFunction) identifier).type() == "getter") {
+                  return ((LoxFunction) identifier).call(this, new ArrayList<>());
+              }
+
+              return identifier;
         }
 
         throw new RuntimeError(expr.name, "Only instances have properties.");

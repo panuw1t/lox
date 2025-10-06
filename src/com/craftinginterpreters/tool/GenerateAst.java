@@ -33,7 +33,7 @@ public class GenerateAst {
                                                    "Block      : List<Stmt> statements",
                                                    "Class      : Token name, List<Stmt.Function> methods",
                                                    "Expression : Expr expression",
-                                                   "Function   : Token name, List<Token> params," + " List<Stmt> body",
+                                                   "Function   : Token name, List<Token> params," + " List<Stmt> body," + " String type",
                                                    "If         : Expr condition, Stmt thenBranch," + " Stmt elseBranch",
                                                    "Return     : Token keyword, Expr value",
                                                    "Print      : Expr expression",
