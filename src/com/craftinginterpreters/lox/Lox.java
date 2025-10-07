@@ -68,9 +68,7 @@ public class Lox {
         // Stop if there was a resolution error.
         if (hadError) return;
 
-        System.out.println("--------tree----------");
         System.out.println(new AstPrinter().print(statements));
-        System.out.println("---------------------");
 
         interpreter.interpret(statements);
     }

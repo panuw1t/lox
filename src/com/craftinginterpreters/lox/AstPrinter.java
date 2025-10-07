@@ -7,7 +7,10 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     private String indent = "";
 
     String print(List<Stmt> statements) {
-        return listStmt(statements);
+        String tree = "--------tree----------\n";
+        tree += listStmt(statements);
+        tree += "\n---------------------\n";
+        return tree;
     }
 
     @Override
@@ -18,7 +21,13 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     @Override
     public String visitClassStmt(Stmt.Class stmt) {
         String previous = this.indent;
-        String Class = this.indent + "(class " + stmt.name.lexeme + "\n";
+        String Class = this.indent + "(class " + stmt.name.lexeme;
+        if (stmt.superclass != null) {
+            Class += " :" + stmt.superclass.name.lexeme;
+        }
+        if (stmt.methods.size() != 0) {
+            Class += "\n";
+        }
         this.indent = this.indent + "  ";
         Class += listStmt(stmt.methods);
         Class += ")";
@@ -88,8 +97,10 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
         for (Token param : stmt.params) {
             defun += param.lexeme + " ";
         }
-        defun = defun.stripTrailing();
-        defun += ")\n";
+        defun = defun.stripTrailing() + ")";
+        if (stmt.body.size() != 0) {
+            defun += "\n";
+        }
         String previous = this.indent;
         this.indent += "  ";
         defun += listStmt(stmt.body);
@@ -125,6 +136,9 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     @Override
     public String visitLiteralExpr(Expr.Literal expr) {
         if (expr.value == null) return "nil";
+        if (expr.value instanceof String) {
+            return "\"" + expr.value.toString() + "\"";
+        }
         return expr.value.toString();
     }
 
