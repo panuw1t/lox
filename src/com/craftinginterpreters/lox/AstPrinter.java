@@ -177,6 +177,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     }
 
     @Override
+    public String visitSuperExpr(Expr.Super expr) {
+        return "(super " + expr.method.lexeme + ")";
+    }
+
+    @Override
     public String visitLambdaExpr(Expr.Lambda expr) {
         String defun = this.indent + "(lambda (";
         for (Token param : expr.fun.params) {
